@@ -7,12 +7,28 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIRS})
 
-# Add FreeGLUT and OpenGL
-find_package(GLUT REQUIRED)
-find_package(OpenGL REQUIRED)
+# macOS-specific handling
+if(APPLE)
+    # Force FreeGLUT paths explicitly
+    include_directories(/opt/homebrew/include)
+    link_directories(/opt/homebrew/lib)
 
-# Link libraries
-target_link_libraries(MolView GLUT::GLUT OpenGL::GL)
+    # Add source files
+    add_executable(MolView src/main.cpp)
 
-# Add source files
-add_executable(MolView src/main.cpp)
+    # Link explicitly to FreeGLUT and OpenGL
+    target_link_libraries(MolView
+        /opt/homebrew/lib/libglut.dylib
+        /System/Library/Frameworks/OpenGL.framework
+    )
+else()
+    # Use default detection for Linux/Windows
+    find_package(GLUT REQUIRED)
+    find_package(OpenGL REQUIRED)
+
+    # Add source files
+    add_executable(MolView src/main.cpp)
+
+    # Link dynamically
+    target_link_libraries(MolView GLUT OpenGL)
+endif()
